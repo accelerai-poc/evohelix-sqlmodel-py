@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel, Session
 from sqlmodel import create_engine, select
 from python_settings import settings
+from sqlalchemy.inspection import inspect
 
 
 class DBEngine(object):
@@ -42,7 +43,10 @@ class DBEngine(object):
             return session.exec(sql).all()
 
     def update(self, db_object, instance):
-        for key, value in instance.items():
+        for key, value in instance.dict(exclude_unset=True).items():
+            keys = [key.name for key in inspect(db_object.__class__).primary_key]
+            if key in keys:
+                continue
             setattr(db_object, key, value)
         with Session(self.engine) as session:
             session.add(db_object)
