@@ -20,7 +20,7 @@ class MyModel(SQLModel, table=True):
 ```
 
 ## Migrations using Alembic
-1. prepare migrations by adding your data model classes to `alembic/env.py` and setting the `sqlalchemy.url` (see `evohelix-service-template`):
+1. prepare migrations by adding your data model classes to `migrations/env.py` and setting the `sqlalchemy.url` (see `evohelix-service-template`):
 ```python
 from myapp.models import MyModel # <-- add this line in import section before running any code
 from alembic import context
