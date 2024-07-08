@@ -2,6 +2,8 @@ from sqlmodel import SQLModel, Session
 from sqlmodel import create_engine, select
 from python_settings import settings
 from sqlalchemy.inspection import inspect
+from utils import _transform_query
+import json
 
 
 class DBEngine(object):
@@ -66,3 +68,12 @@ class DBEngine(object):
         with Session(self.engine) as session:
             session.delete(db_object)
             session.commit()
+
+    def fetch(self, model, filter, projection, options):
+        result = self.read(
+            model,
+            _transform_query(model, filter),
+            options.get("sort", None),
+            options.get("limit", 25),
+            options.get("skip", 0))
+        return [{k: v for k, v in json.loads(r.json()).items() if k in projection} for r in result]
