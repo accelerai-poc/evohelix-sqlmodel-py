@@ -1,9 +1,51 @@
 from sqlmodel import SQLModel, Session
-from sqlmodel import create_engine, select
+from sqlmodel import create_engine, select, or_, and_, not_
 from python_settings import settings
 from sqlalchemy.inspection import inspect
-from utils import _transform_query
 import json
+
+
+def _transform_query(model, query, key=None):
+    if type(query) is dict:
+        conditions = []
+        for k, v in query.items():
+            match k:
+                case '$and':
+                    assert type(v) is list
+                    conditions.append(and_(*_transform_query(model, v)))
+                case '$or':
+                    assert type(v) is list
+                    conditions.append(or_(*_transform_query(model, v)))
+                case '$nor':
+                    assert type(v) is list
+                    conditions.append(not_(and_(*_transform_query(model, v))))
+                case '$not':
+                    conditions.append(not_(_transform_query(model, v)))
+                case '$eq':
+                    conditions.append(getattr(model, key) == v)
+                case '$ne':
+                    conditions.append(getattr(model, key) != v)
+                case '$lt':
+                    conditions.append(getattr(model, key) < v)
+                case '$lte':
+                    conditions.append(getattr(model, key) <= v)
+                case '$gt':
+                    conditions.append(getattr(model, key) > v)
+                case '$gte':
+                    conditions.append(getattr(model, key) >= v)
+                case '$in':
+                    assert type(v) is list
+                    conditions.append(getattr(model, key).in_(v))
+                case '$nin':
+                    assert type(v) is list
+                    conditions.append(not_(getattr(model, key).in_(v)))
+                case _:  # must be field name
+                    conditions.append(_transform_query(model, v, k))
+        return conditions if len(conditions) > 1 else conditions[0]
+    elif type(query) is list:
+        return [_transform_query(model, x) for x in query]
+    else:  # must be shorthand for $eq
+        return getattr(model, key) == query
 
 
 class DBEngine(object):
