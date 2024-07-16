@@ -2,12 +2,13 @@ from sqlmodel import SQLModel, Session
 from sqlmodel import create_engine, select, or_, and_, not_
 from python_settings import settings
 from sqlalchemy.inspection import inspect
+from sqlalchemy import true
 import json
 
 
 def _transform_query(model, query, key=None):
     if not query:  # [], {} or None
-        return []
+        return [true()]
     
     if type(query) is dict:
         conditions = []
@@ -121,4 +122,6 @@ class DBEngine(object):
             options.get("sort", None),
             options.get("limit", 25),
             options.get("skip", 0))
+        if projection is None or len(projection) == 0:
+            return [json.loads(r.json()) for r in result]
         return [{k: v for k, v in json.loads(r.json()).items() if k in projection} for r in result]
