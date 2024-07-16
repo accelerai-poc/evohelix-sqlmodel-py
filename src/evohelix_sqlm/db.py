@@ -6,6 +6,9 @@ import json
 
 
 def _transform_query(model, query, key=None):
+    if not query:  # [], {} or None
+        return []
+    
     if type(query) is dict:
         conditions = []
         for k, v in query.items():
