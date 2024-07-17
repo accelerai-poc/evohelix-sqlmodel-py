@@ -49,7 +49,7 @@ def _transform_query(model, query, key=None):
     elif type(query) is list:
         return [_transform_query(model, x) for x in query]
     else:  # must be shorthand for $eq
-        return getattr(model, key) == query
+        return [getattr(model, key) == query]
 
 
 class DBEngine(object):
