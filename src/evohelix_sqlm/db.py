@@ -49,7 +49,7 @@ def _transform_query(model, query, key=None):
     elif type(query) is list:
         return [_transform_query(model, x) for x in query]
     else:  # must be shorthand for $eq
-        return [getattr(model, key) == query]
+        return getattr(model, key) == query
 
 
 class DBEngine(object):
@@ -83,6 +83,8 @@ class DBEngine(object):
 
     def read(self, model, where=[], order_by=None, limit=None, offset=0):
         with Session(self.engine) as session:
+            if type(where) is not list:
+                where = [where]
             sql = select(model) \
                 .order_by(order_by) \
                 .where(*where) \
